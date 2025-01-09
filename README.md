@@ -4,6 +4,16 @@
 Dil, in hindi/urdu literal meaning heart, is a DI container.
 
 Register your services once and then resolve them anywhere needed.
+
+
+| Methods           |Parameters                                           | Description              |
+| ----------------- |---------|:------------------------------------:|
+| register\<T>          |key : `required` - `string` - Key for the class being registered<br>T : `required` - `custom type` - Name of the class<br>dependency : `optional` - `string array` - registered keys of dependency classes, if any         | registers service/class as transient |
+| registerTransient\<T> |Same As Above         | registers service/class as transient |
+| registerSingleton\<T> |Same As Above     | registers service/class as singleton | 
+| resolve\<T> |key : `required` - `string` - Key for the class being registered        | resolves service/class  when needed | 
+
+
 ## Usage/Examples
 
 ```javascript
@@ -14,7 +24,7 @@ export class LoggerService {
   }
 }
 ```
-Another service dependent on logger service
+Another services dependent on logger service
 
 ```javascript
 // services/UserService.ts
@@ -30,20 +40,40 @@ export class UserService {
 }
 ```
 
-Register both the services with Dil container
+```javascript
+// services/EmployeeService.ts
+import { LoggerService } from './LoggerService';
+
+export class EmployeeService {
+  constructor(private logger: LoggerService) {}
+
+  getEmployee() {
+    this.logger.log(/* log something*/);
+    // return employee;
+  }
+}
+```
+
+Register all the services with Dil container
 ```javascript
 // app.ts
-import { container } from './DIContainer';
+import { container } from '@samarth-srivastava/dil';
 import { LoggerService } from './services/LoggerService';
 import { UserService } from './services/UserService';
+import { EmployeeService } from './services/EmployeeService';
 
 // Register services
-container.register<LoggerService>('loggerService', new LoggerService());
-container.register<UserService>('userService', new UserService(container.resolve<LoggerService>("loggerService")));
+container.registerSingleton<LoggerService>('loggerService', LoggerService);
+container.register<UserService>('userService', UserService, ["loggerService"]);
+container.register<EmployeeService>('empService', EmployeeService, ["loggerService"]);
 
 // Resolve the userService and use it
 const userService = container.resolve<UserService>('userService');
 const user = userService.getUser();
+
+// Resolve the employeeService and use it
+const employeeService = container.resolve<EmployeeService>('empService');
+const employee = employeeService.getEmployee();
 ```
 
 

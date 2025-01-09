@@ -1,6 +1,6 @@
 {
-  "name": "dil",
-  "version": "1.0.0",
+  "name": "@samarth-srivastava/dil",
+  "version": "2.0.0",
   "description": "dil, in hindi/urdu literal meaning heart, is a DI container in typescript nodejs",
   "main": "dist/index.js",
   "scripts": {
@@ -13,6 +13,10 @@
     "Inversion Of Control",
     "Container"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Samarth-Srivastava/DIContainer_NPMPackage.git"
+  },
   "author": "Samarth Srivastava",
   "license": "ISC",
   "dependencies": {
