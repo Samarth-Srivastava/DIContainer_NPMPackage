@@ -1,5 +1,5 @@
-support
+open_in_vscode.sh
+index.ts
+dist/index.js
 test
-examples
 .gitignore
-History.md
