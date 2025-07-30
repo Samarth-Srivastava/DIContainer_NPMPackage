@@ -1,6 +1,6 @@
 {
   "name": "@samarth-srivastava/dil",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "dil, in hindi/urdu literal meaning heart, is a DI container in typescript nodejs",
   "main": "",
   "scripts": {
@@ -11,7 +11,15 @@
   "keywords": [
     "DI Container",
     "Inversion Of Control",
-    "Container"
+    "Container",
+    "dependency injection", 
+    "DI", 
+    "IoC", 
+    "Inversion of Control", 
+    "TypeScript", 
+    "JavaScript", 
+    "container", 
+    "service locator"
   ],
   "repository": {
     "type": "git",

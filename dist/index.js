@@ -35,4 +35,3 @@ class Container {
     }
 }
 exports.container = new Container();
-//# sourceMappingURL=index.js.map
