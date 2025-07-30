@@ -13,6 +13,13 @@ Register your services once and then resolve them anywhere needed.
 | registerSingleton\<T> |Same As Above     | registers service/class as singleton | 
 | resolve\<T> |key : `required` - `string` - Key for the class being registered        | resolves service/class  when needed | 
 
+## 🚀 Installation
+
+```bash
+npm install @samarth-srivastava/dil
+# or
+yarn add @samarth-srivastava/dil
+```
 
 ## Usage/Examples
 
