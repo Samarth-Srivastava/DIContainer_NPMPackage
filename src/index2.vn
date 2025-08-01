@@ -1,0 +1,143 @@
+import 'reflect-metadata';
+
+type Constructor<T> = { new (...args: any[]): T };
+
+const INJECTABLE_METADATA_KEY = Symbol('dil:injectable');
+const INJECT_METADATA_KEY = Symbol('dil:inject');
+const PARAM_TYPES_METADATA_KEY = 'design:paramtypes';
+
+export function injectable(): ClassDecorator {
+  return (target: Function) => {
+    Reflect.defineMetadata(INJECTABLE_METADATA_KEY, true, target);
+  };
+}
+
+export function inject(token: string): ParameterDecorator {
+  return (target: Object, propertyKey: string | symbol | undefined, parameterIndex: number) => {
+    // Get existing injection tokens for this parameter index, or initialize an empty array
+    const existingInjections: { index: number, token: string }[] = Reflect.getOwnMetadata(INJECT_METADATA_KEY, target) || [];
+
+    // Add the new injection token for the current parameter index
+    existingInjections.push({ index: parameterIndex, token: token });
+
+    // Store the updated injection tokens back on the class
+    Reflect.defineMetadata(INJECT_METADATA_KEY, existingInjections, target);
+  };
+}
+
+class Container {
+  private services = new Map<string, {
+    nameOfClassT: Constructor<any>,
+    dependencies: string[], // Manual dependencies (for non-decorated or fallback)
+    isSingleton: boolean,
+    instanceOfClassT?: any
+  }>();
+
+  constructor() { }
+
+  /**
+   * Registers a service as transient (new instance per resolution).
+   *
+   * @param token The unique string key for the service.
+   * @param nameOfClassT The constructor function of the class to register.
+   * @param dependencies (Optional) Manual list of dependency tokens.
+   * If not provided and the class is @injectable, dependencies will be inferred via decorators.
+   */
+  register<T>(token: string, nameOfClassT: Constructor<T>, dependencies: string[] = []): void {
+    this.services.set(token, { nameOfClassT, dependencies, isSingleton: false });
+  }
+
+  /**
+   * Registers a service as transient (new instance per resolution).
+   * Alias for `register`.
+   */
+  registerTransient<T>(token: string, nameOfClassT: Constructor<T>, dependencies: string[] = []): void {
+    this.register(token, nameOfClassT, dependencies); // Calls the main register method
+  }
+
+  /**
+   * Registers a service as a singleton (single instance shared across resolutions).
+   *
+   * @param token The unique string key for the service.
+   * @param nameOfClassT The constructor function of the class to register.
+   * @param dependencies (Optional) Manual list of dependency tokens.
+   * If not provided and the class is @injectable, dependencies will be inferred via decorators.
+   */
+  registerSingleton<T>(token: string, nameOfClassT: Constructor<T>, dependencies: string[] = []): void {
+    this.services.set(token, { nameOfClassT, dependencies, isSingleton: true });
+  }
+
+  /**
+   * Resolves a service instance from the container.
+   * Automatically resolves and injects dependencies.
+   *
+   * @param token The unique string key of the service to resolve.
+   * @returns An instance of the requested service.
+   */
+  resolve<T>(token: string): T {
+    const registered_Object = this.services.get(token);
+
+    if (!registered_Object) {
+      throw new Error(`[Dil Error]: Service not found for token: "${token}"`);
+    }
+
+    // Return existing singleton instance if available
+    if (registered_Object.isSingleton && registered_Object.instanceOfClassT) {
+      return registered_Object.instanceOfClassT;
+    }
+
+    const { nameOfClassT, dependencies, isSingleton } = registered_Object;
+
+    // --- Dependency Resolution Logic ---
+    let injections: any[];
+
+    // 1. Check if the class is marked as injectable AND has explicit @inject decorators
+    const hasExplicitInjections = Reflect.hasOwnMetadata(INJECT_METADATA_KEY, nameOfClassT);
+    const isClassInjectable = Reflect.hasOwnMetadata(INJECTABLE_METADATA_KEY, nameOfClassT);
+
+    if (isClassInjectable || hasExplicitInjections) {
+        const paramTypes: any[] = Reflect.getOwnMetadata(PARAM_TYPES_METADATA_KEY, nameOfClassT) || [];
+        const explicitInjections: { index: number, token: string }[] = Reflect.getOwnMetadata(INJECT_METADATA_KEY, nameOfClassT) || [];
+
+        injections = paramTypes.map((paramType, index) => {
+            // Find if there's an explicit @inject token for this parameter
+            const explicitTokenEntry = explicitInjections.find(ei => ei.index === index);
+
+            if (explicitTokenEntry) {
+                // If @inject is used, resolve by the provided token
+                return this.resolve(explicitTokenEntry.token);
+            } else if (paramType && paramType.name) {
+                // If @inject is NOT used, but paramType exists (and it's a class),
+                // try to resolve by its name (assuming class name as token).
+                // NOTE: This works well for concrete classes, but not interfaces.
+                // For interfaces, @inject() is mandatory.
+                return this.resolve(paramType.name);
+            } else {
+                // Handle cases where type metadata isn't available (e.g., primitive types)
+                // or if it's an interface without @inject.
+                throw new Error(
+                    `[Dil Error]: Cannot resolve dependency for parameter ${index} of "${nameOfClassT.name}". ` +
+                    `Please ensure it's either an @injectable class, or use @inject('${token}') explicitly.`
+                );
+            }
+        });
+    } else if (dependencies.length > 0) {
+        // 2. Fallback to manual 'dependencies' array if no decorators are used on the class
+        injections = dependencies.map(dep => this.resolve(dep));
+    } else {
+        // 3. No decorators, no manual dependencies: assume no constructor parameters or empty
+        injections = [];
+    }
+    // --- End Dependency Resolution Logic ---
+
+    const ObjectOfClassT = new nameOfClassT(...injections);
+
+    if (isSingleton) {
+      registered_Object.instanceOfClassT = ObjectOfClassT;
+    }
+
+    return ObjectOfClassT;
+  }
+}
+
+export const container = new Container();

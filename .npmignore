@@ -1,5 +1,6 @@
 open_in_vscode.sh
-index.ts
+src/index2.ts
+src/index.ts
 dist/index.js
-test
+dist/index2.js
 .gitignore
