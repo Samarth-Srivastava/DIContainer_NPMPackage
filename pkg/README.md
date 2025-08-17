@@ -1,6 +1,6 @@
 # Dil: Your Heartfelt Dependency Injection Container for TypeScript & JavaScript
 
-[](https://www.npmjs.com/package/@samarth-srivastava/dil)
+[](https://www.npmjs.com/package/dil)
 [](https://opensource.org/licenses/MIT)
 [](https://github.com/Samarth-Srivastava)
 [](https://www.linkedin.com/in/samarthsrivastava/)
@@ -26,9 +26,9 @@ Say goodbye to manual dependency management and tight coupling. With Dil, you re
 Getting started with Dil is straightforward:
 
 ```bash
-npm install @samarth-srivastava/dil
+npm install dil
 # or
-yarn add @samarth-srivastava/dil
+yarn add dil
 ```
 
 -----
@@ -102,7 +102,7 @@ Finally, register and resolve your services using the `container`:
 
 ```typescript
 // app.ts (Your application's entry point)
-import { container } from '@samarth-srivastava/dil';
+import { container } from 'dil';
 import { LoggerService } from './services/LoggerService';
 import { UserService } from './services/UserService';
 import { EmployeeService } from './services/EmployeeService';
